@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jun  2 21:16:35 2021
+@author: Ivan
+版權屬於「行銷搬進大程式」所有，若有疑問，可聯絡ivanyang0606@gmail.com
+
+Line Bot聊天機器人
+第一章 Line Bot申請與串接
+Line Bot機器人串接與測試
+"""
+# 載入LineBot所需要的套件
 from flask import Flask, request, abort
 
 from linebot import (
@@ -8,25 +19,14 @@ from linebot.exceptions import (
 )
 from linebot.models import *
 
-
-#======這裡是呼叫的檔案內容=====
-from message import *
-from new import *
-from Function import *
-#======這裡是呼叫的檔案內容=====
-
-#======python的函數庫==========
-import tempfile, os
-import datetime
-import time
-#======python的函數庫==========
-
 app = Flask(__name__)
-static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
-# Channel Access Token
-line_bot_api = LineBotApi('U7348e17c313a9bcc86c5e60e89c31c5f')
-# Channel Secret
+
+# 必須放上自己的Channel Access Token
+line_bot_api = LineBotApi('xqwt/DpG+3lMj6T3DhlKBbzsGkiuRJhkxQ9sX4+JCEPq55D/Xk33/RaX4BReE3BYEO16+JSgyLL68VlqyZ1SwLm4imj1Hjos11ZfPGWHWwh21jwijmmK3U/DHkqL788TZN5ZWy8ALsBbciEJc9EodQdB04t89/1O/w1cDnyilFU=')
+# 必須放上自己的Channel Secret
 handler = WebhookHandler('005c30c8c053608983e9b15fbd2da740')
+
+line_bot_api.push_message('U7348e17c313a9bcc86c5e60e89c31c5f', TextSendMessage(text='你可以開始了'))
 
 
 # 監聽所有來自 /callback 的 Post Request
@@ -34,59 +34,31 @@ handler = WebhookHandler('005c30c8c053608983e9b15fbd2da740')
 def callback():
     # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
+
     # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
+
     # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
+
     return 'OK'
 
 
-# 處理訊息
+# 訊息傳遞區塊
+##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    msg = event.message.text
-    if '最新合作廠商' in msg:
-        message = imagemap_message()
-        line_bot_api.reply_message(event.reply_token, message)
-    elif '最新活動訊息' in msg:
-        message = buttons_message()
-        line_bot_api.reply_message(event.reply_token, message)
-    elif '註冊會員' in msg:
-        message = Confirm_Template()
-        line_bot_api.reply_message(event.reply_token, message)
-    elif '旋轉木馬' in msg:
-        message = Carousel_Template()
-        line_bot_api.reply_message(event.reply_token, message)
-    elif '圖片畫廊' in msg:
-        message = test()
-        line_bot_api.reply_message(event.reply_token, message)
-    elif '功能列表' in msg:
-        message = function_list()
-        line_bot_api.reply_message(event.reply_token, message)
-    else:
-        message = TextSendMessage(text=msg)
-        line_bot_api.reply_message(event.reply_token, message)
-
-@handler.add(PostbackEvent)
-def handle_message(event):
-    print(event.postback.data)
-
-
-@handler.add(MemberJoinedEvent)
-def welcome(event):
-    uid = event.joined.members[0].user_id
-    gid = event.source.group_id
-    profile = line_bot_api.get_group_member_profile(gid, uid)
-    name = profile.display_name
-    message = TextSendMessage(text=f'{name}歡迎加入')
+    message = TextSendMessage(text=event.message.text)
     line_bot_api.reply_message(event.reply_token, message)
-        
-        
+
+
+# 主程式
 import os
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
